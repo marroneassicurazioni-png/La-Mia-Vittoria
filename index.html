@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Mia Vittoria | Registratore Memorie</title>
+    <!-- Blocco motori di ricerca per privacy -->
+    <meta name="robots" content="noindex, nofollow">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header {
+            background: #1D3557;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 4px solid #E63946;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .question-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 400px;
+            width: 100%;
+            margin-bottom: 40px;
+            border: 1px solid #e2e8f0;
+        }
+        .question-label {
+            color: #64748b;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .question-text {
+            font-size: 20px;
+            line-height: 1.4;
+            color: #0f172a;
+            font-style: italic;
+        }
+        
+        .record-btn-container {
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        .record-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #E63946;
+            color: white;
+            border: none;
+            font-size: 36px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(230, 57, 70, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .record-btn.recording {
+            animation: pulse 1.5s infinite;
+            background: #d90429;
+            transform: scale(1.1);
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7); }
+            70% { box-shadow: 0 0 0 25px rgba(230, 57, 70, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
+        }
+        
+        .status-text {
+            margin-top: 20px;
+            font-weight: 600;
+            color: #64748b;
+            height: 24px;
+        }
+        
+        .footer {
+            padding: 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        /* Schermata di Login */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1D3557;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #loginOverlay h2 { color: white; margin-bottom: 20px; }
+        #pinInput {
+            padding: 15px;
+            font-size: 24px;
+            text-align: center;
+            border-radius: 8px;
+            border: none;
+            width: 200px;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+        }
+        #loginBtn {
+            background: #E63946;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Protezione PIN per privacy -->
+    <div id="loginOverlay">
+        <h2>Codice di Accesso</h2>
+        <input type="password" id="pinInput" placeholder="PIN" maxlength="4">
+        <button id="loginBtn">Entra</button>
+        <p id="loginError" style="color: #ffb3b3; display: none; margin-top: 15px;">PIN errato.</p>
+    </div>
+
+    <div class="header">
+        <h1>La Mia Vittoria</h1>
+    </div>
+
+    <div class="container">
+        <div class="question-card">
+            <div class="question-label">Domanda del Giorno</div>
+            <div class="question-text" id="questionBox">
+                "Qual è la situazione più assurda o divertente che hai dovuto gestire in agenzia prima dell'arrivo dei computer?"
+            </div>
+        </div>
+
+        <div class="record-btn-container">
+            <button class="record-btn" id="recordBtn">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+        </div>
+        
+        <div class="status-text" id="statusText">Tocca per registrare</div>
+        
+        <div id="timer" style="display: none; font-size: 24px; font-weight: bold; color: #E63946; margin-top: 10px;">00:00</div>
+    </div>
+
+    <div class="footer">
+        Progetto Memoria Storica &copy; 2026 Marrone Assicurazioni
+    </div>
+
+    <script>
+        // CONFIGURAZIONE APPS SCRIPT (DA INSERIRE DOPO AVER CREATO LO SCRIPT GOOGLE)
+        const GOOGLE_APPS_SCRIPT_URL = "INSERISCI_QUI_URL_DELLO_SCRIPT";
+
+        // Login System (PIN semplice: 1975) - Simulazione anno
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            if(document.getElementById('pinInput').value === "1975") {
+                document.getElementById('loginOverlay').style.display = 'none';
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        });
+
+        // Audio Recording Logic
+        const btn = document.getElementById('recordBtn');
+        const statusText = document.getElementById('statusText');
+        const timerDisplay = document.getElementById('timer');
+        let isRecording = false;
+        let startTime;
+        let timerInterval;
+        let mediaRecorder;
+        let audioChunks = [];
+
+        function updateTimer() {
+            const now = new Date();
+            const diff = new Date(now - startTime);
+            const m = diff.getMinutes().toString().padStart(2, '0');
+            const s = diff.getSeconds().toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+        }
+
+        async function uploadToGoogleDrive(audioBlob) {
+            statusText.textContent = "Salvataggio nella cassaforte in corso...";
+            statusText.style.color = "#1D3557";
+            
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onloadend = async function() {
+                const base64data = reader.result.split(',')[1];
+                
+                if (GOOGLE_APPS_SCRIPT_URL === "INSERISCI_QUI_URL_DELLO_SCRIPT") {
+                    console.log("Simulazione invio completata. Inserisci URL reale.");
+                    finalizeUpload(true);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            fileName: `Racconto_${new Date().toISOString().slice(0,10)}.webm`,
+                            mimeType: 'audio/webm',
+                            fileData: base64data
+                        }),
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        }
+                    });
+                    finalizeUpload(response.ok);
+                } catch (error) {
+                    console.error('Errore:', error);
+                    finalizeUpload(false);
+                }
+            }
+        }
+
+        function finalizeUpload(success) {
+            if(success) {
+                statusText.textContent = "Ottimo! Aneddoto salvato al sicuro su Google Drive.";
+                statusText.style.color = "#2a9d8f";
+            } else {
+                statusText.textContent = "Errore di connessione. Riprova più tardi.";
+                statusText.style.color = "#E63946";
+            }
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                btn.style.background = "#E63946";
+                btn.style.boxShadow = "0 10px 20px rgba(230, 57, 70, 0.3)";
+                statusText.textContent = "Tocca per registrare un altro aneddoto";
+                statusText.style.color = "#64748b";
+            }, 5000);
+        }
+
+        btn.addEventListener('click', async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener("stop", () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        uploadToGoogleDrive(audioBlob);
+                    });
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<i class="fa-solid fa-stop"></i>';
+                    statusText.textContent = "Registrazione in corso...";
+                    statusText.style.color = "#E63946";
+                    timerDisplay.style.display = "block";
+                    startTime = new Date();
+                    timerInterval = setInterval(updateTimer, 1000);
+                } catch (err) {
+                    alert("Devi consentire l'uso del microfono per registrare!");
+                }
+            } else {
+                // Ferma registrazione
+                isRecording = false;
+                mediaRecorder.stop();
+                btn.classList.remove('recording');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                btn.style.background = "#1D3557";
+                btn.style.boxShadow = "none";
+                clearInterval(timerInterval);
+                timerDisplay.style.display = "none";
+                timerDisplay.textContent = "00:00";
+            }
+        });
+    </script>
+</body>
+</html>
