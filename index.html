@@ -262,8 +262,15 @@
                 btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
                 btn.style.background = "#E63946";
                 btn.style.boxShadow = "0 10px 20px rgba(230, 57, 70, 0.3)";
-                statusText.textContent = "Tocca per registrare un altro aneddoto";
+                statusText.textContent = "Elaborazione AI della tua risposta in corso...";
                 statusText.style.color = "#64748b";
+                
+                // Simula la generazione di una domanda contestuale basata sul racconto appena fatto
+                setTimeout(() => {
+                    document.getElementById('questionBox').innerHTML = "<em>L'Intelligenza Artificiale ha ascoltato il tuo racconto...</em><br><br><strong>Nuova Domanda:</strong> Hai appena accennato all'ispettore di Milano degli anni '80. Com'era il rapporto umano con la Direzione prima dell'avvento dei computer?";
+                    statusText.textContent = "Nuova domanda pronta. Tocca per rispondere.";
+                }, 3000);
+
             }, 5000);
         }
 
