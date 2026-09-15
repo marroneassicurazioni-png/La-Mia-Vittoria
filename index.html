@@ -231,8 +231,9 @@
                 }
 
                 try {
-                    const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    await fetch(GOOGLE_APPS_SCRIPT_URL, {
                         method: 'POST',
+                        mode: 'no-cors', // Bypassa le restrizioni CORS del server Google
                         body: JSON.stringify({
                             fileName: `Racconto_${new Date().toISOString().slice(0,10)}.webm`,
                             mimeType: 'audio/webm',
@@ -242,7 +243,8 @@
                             'Content-Type': 'text/plain;charset=utf-8',
                         }
                     });
-                    finalizeUpload(response.ok);
+                    // Con no-cors la risposta è sempre opaca, assumiamo successo se non va in catch
+                    finalizeUpload(true);
                 } catch (error) {
                     console.error('Errore:', error);
                     finalizeUpload(false);
