@@ -275,7 +275,7 @@
                 let barHeight;
                 let x = 0;
                 for(let i = 0; i < bufferLength; i++) {
-                    barHeight = dataArray[i] / 2;
+                    barHeight = isPaused ? 2 : (dataArray[i] / 2);
                     canvasCtx.fillStyle = isPaused ? 'rgb(200, 200, 200)' : 'rgb(230, 57, 70)';
                     canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
                     x += barWidth + 1;
