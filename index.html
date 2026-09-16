@@ -463,9 +463,9 @@
                         reviewContainer.style.display = "flex";
                     });
 
+                    isRecording = true;
                     visualize(stream);
                     mediaRecorder.start();
-                    isRecording = true;
                     isPaused = false;
                     accumulatedTime = 0;
                     pauseBtn.style.display = "flex";
