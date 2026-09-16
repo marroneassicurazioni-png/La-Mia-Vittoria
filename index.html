@@ -257,12 +257,6 @@
         let currentAudioBlob;
         
         function visualize(stream) {
-            if(!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if(audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
             analyser = audioCtx.createAnalyser();
             source = audioCtx.createMediaStreamSource(stream);
             source.connect(analyser);
@@ -440,6 +434,14 @@
 
         btn.addEventListener('click', async () => {
             if (!isRecording) {
+                // Inizializza subito AudioContext al click per iOS Safari
+                if(!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if(audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
