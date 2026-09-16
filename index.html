@@ -200,7 +200,23 @@
         
         <div class="status-text" id="statusText">Tocca per registrare</div>
         
+        <canvas id="audioVisualizer" width="300" height="60" style="display: none; margin-top: 15px; border-radius: 10px; background: #f1f5f9;"></canvas>
+        
+        <div id="reviewContainer" style="display: none; flex-direction: column; align-items: center; margin-top: 20px; width: 100%;">
+            <audio id="audioPlayback" controls style="width: 100%; max-width: 300px; margin-bottom: 15px; outline: none;"></audio>
+            <div style="display: flex; gap: 15px;">
+                <button id="retryBtn" style="background: #e2e8f0; color: #475569; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">Rifai</button>
+                <button id="sendBtn" style="background: #2a9d8f; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 10px rgba(42, 157, 143, 0.3);">Conferma e Invia</button>
+            </div>
+        </div>
+        
         <div id="timer" style="display: none; font-size: 24px; font-weight: bold; color: #E63946; margin-top: 10px;">00:00</div>
+        
+        <div id="chaptersContainer" style="margin-top: 40px; text-align: left; width: 100%; max-width: 400px; display: none;">
+            <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; color: #64748b; margin-bottom: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px;">I Miei Capitoli</div>
+            <ul id="chaptersList" style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; color: #334155; line-height: 1.8;"></ul>
+        </div>
+ style="display: none; font-size: 24px; font-weight: bold; color: #E63946; margin-top: 10px;">00:00</div>
     </div>
 
     <div class="footer">
@@ -210,21 +226,7 @@
     <script>
         // CONFIGURAZIONE APPS SCRIPT (DA INSERIRE DOPO AVER CREATO LO SCRIPT GOOGLE)
         // Carica la domanda del giorno dinamicamente dall'IA
-        window.addEventListener('DOMContentLoaded', async () => {
-            if (GOOGLE_APPS_SCRIPT_URL === "INSERISCI_QUI_URL_DELLO_SCRIPT") return;
-            
-            try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.domanda) {
-                        document.getElementById('questionBox').innerHTML = data.domanda;
-                    }
-                }
-            } catch (err) {
-                console.log("Errore nel caricamento della domanda dinamica, uso quella di default:", err);
-            }
-        });
+        
 
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwGZPY1lMK6zTzLDhejCWrz4c-OcEAn9u6ajTFPrkN9j9v_8MXqOrZXyqKmurlfOhqRzw/exec";
 
@@ -235,6 +237,91 @@
             } else {
                 document.getElementById('loginError').style.display = 'block';
             }
+        });
+
+
+        // Visualizer and Review logic
+        const canvas = document.getElementById('audioVisualizer');
+        const canvasCtx = canvas.getContext('2d');
+        const reviewContainer = document.getElementById('reviewContainer');
+        const audioPlayback = document.getElementById('audioPlayback');
+        const sendBtn = document.getElementById('sendBtn');
+        const retryBtn = document.getElementById('retryBtn');
+        const chaptersContainer = document.getElementById('chaptersContainer');
+        const chaptersList = document.getElementById('chaptersList');
+        
+        let audioCtx;
+        let analyser;
+        let source;
+        let drawVisual;
+        let currentAudioBlob;
+        
+        function visualize(stream) {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            analyser = audioCtx.createAnalyser();
+            source = audioCtx.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            canvas.style.display = "block";
+            
+            function draw() {
+                if(!isRecording && !isPaused) return; // Stop drawing
+                drawVisual = requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                canvasCtx.fillStyle = 'rgb(241, 245, 249)';
+                canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+                const barWidth = (canvas.width / bufferLength) * 2.5;
+                let barHeight;
+                let x = 0;
+                for(let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 2;
+                    canvasCtx.fillStyle = isPaused ? 'rgb(200, 200, 200)' : 'rgb(230, 57, 70)';
+                    canvasCtx.fillRect(x, canvas.height - barHeight/2, barWidth, barHeight/2);
+                    x += barWidth + 1;
+                }
+            }
+            draw();
+        }
+        
+        // Fetch logic update per recuperare anche i capitoli
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (GOOGLE_APPS_SCRIPT_URL === "INSERISCI_QUI_URL_DELLO_SCRIPT") return;
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.domanda) {
+                        document.getElementById('questionBox').innerHTML = data.domanda;
+                    }
+                    if (data.capitoli && data.capitoli.length > 0) {
+                        chaptersContainer.style.display = "block";
+                        data.capitoli.forEach(cap => {
+                            const li = document.createElement('li');
+                            li.innerHTML = '<i class="fa-solid fa-book-open" style="color: #2a9d8f; margin-right: 8px;"></i>' + cap;
+                            chaptersList.appendChild(li);
+                        });
+                    }
+                }
+            } catch (err) {
+                console.log("Errore GET", err);
+            }
+        });
+        
+        sendBtn.addEventListener('click', () => {
+            reviewContainer.style.display = "none";
+            uploadToGoogleDrive(currentAudioBlob);
+        });
+        
+        retryBtn.addEventListener('click', () => {
+            reviewContainer.style.display = "none";
+            currentAudioBlob = null;
+            document.querySelector('.record-btn-container').style.display = "flex";
+            statusText.textContent = "Tocca per registrare";
+            statusText.style.color = "#64748b";
         });
 
         // Audio Recording Logic
@@ -355,10 +442,18 @@
                     });
 
                     mediaRecorder.addEventListener("stop", () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                        uploadToGoogleDrive(audioBlob);
+                        currentAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        canvas.style.display = "none";
+                        document.querySelector('.record-btn-container').style.display = "none";
+                        statusText.textContent = "Riascolta o Invia:";
+                        statusText.style.color = "#1D3557";
+                        
+                        const audioUrl = URL.createObjectURL(currentAudioBlob);
+                        audioPlayback.src = audioUrl;
+                        reviewContainer.style.display = "flex";
                     });
 
+                    visualize(stream);
                     mediaRecorder.start();
                     isRecording = true;
                     isPaused = false;
