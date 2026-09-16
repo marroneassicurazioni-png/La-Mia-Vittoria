@@ -186,6 +186,23 @@
 
     <script>
         // CONFIGURAZIONE APPS SCRIPT (DA INSERIRE DOPO AVER CREATO LO SCRIPT GOOGLE)
+        // Carica la domanda del giorno dinamicamente dall'IA
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (GOOGLE_APPS_SCRIPT_URL === "INSERISCI_QUI_URL_DELLO_SCRIPT") return;
+            
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.domanda) {
+                        document.getElementById('questionBox').innerHTML = data.domanda;
+                    }
+                }
+            } catch (err) {
+                console.log("Errore nel caricamento della domanda dinamica, uso quella di default:", err);
+            }
+        });
+
         const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsg4o7Jh_ILVF2F1GdUjQYSveUIv_8NXC2a4b_q_41wL1opXTAt8Xzen4uAg06I0czig/exec";
 
         // Login System (PIN semplice: 1975) - Simulazione anno
@@ -267,11 +284,8 @@
                 statusText.textContent = "Elaborazione AI della tua risposta in corso...";
                 statusText.style.color = "#64748b";
                 
-                // Simula la generazione di una domanda contestuale basata sul racconto appena fatto
-                setTimeout(() => {
-                    document.getElementById('questionBox').innerHTML = "<em>L'Intelligenza Artificiale ha ascoltato il tuo racconto...</em><br><br><strong>Nuova Domanda:</strong> Hai appena accennato all'ispettore di Milano degli anni '80. Com'era il rapporto umano con la Direzione prima dell'avvento dei computer?";
-                    statusText.textContent = "Nuova domanda pronta. Tocca per rispondere.";
-                }, 3000);
+                // L'IA sul backend sta generando la prossima domanda su Drive.
+                // Domani, all'apertura dell'App, verrà caricata in automatico.
 
             }, 5000);
         }
