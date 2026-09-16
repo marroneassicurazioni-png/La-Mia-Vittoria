@@ -305,6 +305,7 @@
                 }
             } catch (err) {
                 console.log("Errore GET", err);
+                document.getElementById('questionBox').innerHTML = "ERRORE DI RETE: " + err.message;
             }
         });
         
