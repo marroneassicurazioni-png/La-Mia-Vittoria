@@ -325,6 +325,11 @@
             document.querySelector('.record-btn-container').style.display = "flex";
             statusText.textContent = "Tocca per registrare";
             statusText.style.color = "#64748b";
+            
+            // Ripristina il bottone originale rosso con il microfono
+            btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+            btn.style.background = "#E63946";
+            btn.style.boxShadow = "0 10px 20px rgba(230, 57, 70, 0.3)";
         });
 
         // Audio Recording Logic
