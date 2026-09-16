@@ -99,6 +99,26 @@
             100% { box-shadow: 0 0 0 0 rgba(230, 57, 70, 0); }
         }
         
+        
+        .pause-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: #fca311;
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(252, 163, 17, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pause-btn:hover {
+            transform: scale(1.05);
+        }
+
         .status-text {
             margin-top: 20px;
             font-weight: 600;
@@ -169,9 +189,12 @@
             </div>
         </div>
 
-        <div class="record-btn-container">
+        <div class="record-btn-container" style="display: flex; gap: 20px; justify-content: center; align-items: center;">
             <button class="record-btn" id="recordBtn">
                 <i class="fa-solid fa-microphone"></i>
+            </button>
+            <button class="pause-btn" id="pauseBtn" style="display: none;">
+                <i class="fa-solid fa-pause"></i>
             </button>
         </div>
         
@@ -219,16 +242,19 @@
         const statusText = document.getElementById('statusText');
         const timerDisplay = document.getElementById('timer');
         let isRecording = false;
+        let isPaused = false;
+        let accumulatedTime = 0;
         let startTime;
         let timerInterval;
+        const pauseBtn = document.getElementById('pauseBtn');
         let mediaRecorder;
         let audioChunks = [];
 
         function updateTimer() {
             const now = new Date();
-            const diff = new Date(now - startTime);
-            const m = diff.getMinutes().toString().padStart(2, '0');
-            const s = diff.getSeconds().toString().padStart(2, '0');
+            const diff = (now - startTime) + accumulatedTime;
+            const m = Math.floor(diff / 60000).toString().padStart(2, '0');
+            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
             timerDisplay.textContent = `${m}:${s}`;
         }
 
@@ -290,6 +316,33 @@
             }, 5000);
         }
 
+        
+        pauseBtn.addEventListener('click', () => {
+            if (!isRecording) return;
+            
+            if (isPaused) {
+                // Riprendi
+                mediaRecorder.resume();
+                isPaused = false;
+                pauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                pauseBtn.style.background = "#fca311";
+                statusText.textContent = "Registrazione in corso...";
+                btn.classList.add('recording');
+                startTime = new Date();
+                timerInterval = setInterval(updateTimer, 1000);
+            } else {
+                // Pausa
+                mediaRecorder.pause();
+                isPaused = true;
+                pauseBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                pauseBtn.style.background = "#2a9d8f";
+                statusText.textContent = "Registrazione in PAUSA";
+                btn.classList.remove('recording');
+                accumulatedTime += (new Date() - startTime);
+                clearInterval(timerInterval);
+            }
+        });
+
         btn.addEventListener('click', async () => {
             if (!isRecording) {
                 try {
@@ -308,6 +361,9 @@
 
                     mediaRecorder.start();
                     isRecording = true;
+                    isPaused = false;
+                    accumulatedTime = 0;
+                    pauseBtn.style.display = "flex";
                     btn.classList.add('recording');
                     btn.innerHTML = '<i class="fa-solid fa-stop"></i>';
                     statusText.textContent = "Registrazione in corso...";
@@ -321,6 +377,7 @@
             } else {
                 // Ferma registrazione
                 isRecording = false;
+                pauseBtn.style.display = "none";
                 mediaRecorder.stop();
                 btn.classList.remove('recording');
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
